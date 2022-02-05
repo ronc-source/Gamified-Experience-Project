@@ -4,7 +4,8 @@ import numpy as np
 import cv2
 
 #Declare cascade classifier used for Face Detection (Uses the pre-trained Haar Cascade Classifier)
-frontFaceClassifier = cv2.CascadeClassifier('FER/haarcascade_frontalface_default.xml')
+
+frontFaceClassifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
 #Get default webcam source
 webcamSource = cv2.VideoCapture(0)
@@ -21,7 +22,7 @@ while capturingVideo:
 
     #Search for face and draw a rectangle on its location
     gray = cv2.cvtColor(videoFrame, cv2.COLOR_BGR2GRAY)
-    scaleFactor = 1.1
+    scaleFactor = 1.15
     minNeighbors = 6
     faces = frontFaceClassifier.detectMultiScale(gray, scaleFactor, minNeighbors)
 

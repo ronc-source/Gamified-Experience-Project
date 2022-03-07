@@ -2,6 +2,9 @@
 
 import numpy as np
 import cv2
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 #Declare cascade classifier used for Face Detection (Uses the pre-trained Haar Cascade Classifier)
 

@@ -5,10 +5,17 @@ import cv2
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import tensorflow as tf
+from tensorflow import keras
 
 #Declare cascade classifier used for Face Detection (Uses the pre-trained Haar Cascade Classifier)
 
 frontFaceClassifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
+#Declare Model to be used for Emotion Recognition and Emotion Classes
+
+emotionModel = keras.models.load_model("fer_model_v1")
+class_names = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
 
 #Get default webcam source
 webcamSource = cv2.VideoCapture(0)
@@ -39,6 +46,15 @@ while capturingVideo:
         colorThickness = 3
 
         cv2.rectangle(videoFrame, topLeftRectangle, bottomRightRectangle, color, colorThickness)
+        
+        grayFrame = cv2.resize(gray[y:recHeight, x:recWidth], (48,48))
+        imgReformat = np.expand_dims(np.array(grayFrame), axis = 0)
+
+        predictedEmotion = emotionModel.predict(imgReformat)
+        
+        classIndex = np.where(predictedEmotion[0] == np.amax(predictedEmotion[0]))
+        print(class_names[classIndex[0][0]])
+
 
 
 

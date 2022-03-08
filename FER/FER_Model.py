@@ -14,8 +14,7 @@ from keras.preprocessing.image import image_dataset_from_directory
 
 
 
-#Step 1: Get Training and Test Data for Model from Dataset (FER 2013)
-
+#Step 1: Get Training and Test Data for Model from Dataset 
 
 
 
@@ -98,82 +97,4 @@ print(f"test accuracy: {testing_accuracy}")
 
 
 #Step 4: Save the Model with its current weight values
-
-
-
-'''
-#CNN FROM PYTORCH
-CNN_Model  = nn.Sequential(
-
-#1st Layer
-nn.Conv2d(in_channels=1, out_channels = 32, kernel_size = 3, stride = 1, padding = 1),
-nn.BatchNorm2d(32),
-nn.ReLU(),
-nn.Dropout(0.2),
-
-#2nd Layer
-nn.Conv2d(in_channels=32, out_channels=64, kernel_size = 3, stride = 1, padding = 1),
-nn.BatchNorm2d(64),
-nn.ReLU(),
-nn.MaxPool2d(2,2),
-nn.Dropout(0.2),
-
-#3rd Layer
-nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1 ),
-nn.BatchNorm2d(128),
-nn.ReLU(),
-nn.Dropout(0.2),
-
-#4th Layer
-nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1 ),
-nn.BatchNorm2d(256),
-nn.ReLU(),
-nn.MaxPool2d(2,2),
-nn.Dropout(0.2),
-
-#Fully Connected 1st Layer
-
-#input is 48x48 grayscale
-# 3x3 convolution with padding
-
-#Layer 1
-#(48-3)/1 + 1 = 46x46
-#Max pooling = 2x2 -> 46/2 = 23x23
-
-#Layer 2
-#(23-3)/1 + 1 = 21x21
-#Max pooling -> 21/2 -> 10.5x10.5
-
-#Layer 3
-#(10.5-3)/1 + 1 = 8.5
-#Max Pooling -> 8.5/2 -> 4.25x4.25
-
-#Layer 4
-#(4.25-3)/1 + 1 = 2.25
-#Max Pooling -> 2.25/2 -> 1.125x1.125
-
-
-#Fully Connected Layers -> Output = 7 Emotion Classification
-#Collapse the input size to 1D
-nn.Flatten(),
-nn.Linear(256*4*4,70),
-nn.ReLU(),
-nn.Linear(70, 7),
-
-
-)
-
-
-
-class ConvultionalNetwork(nn.Module):
-    def __init__(self): 
-        #in_channels = number of channels in the layer above or in the first layer, the number of channels in the data (3 = RGB)
-        #out_channels = matter of preference
-
-        #padding = (kernel_size - 1) / 2
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding=1)
-        self.batchnorm1 = nn.BatchNorm2d
-    
-    def forward(self, x):
-        pass
-'''
+cnn_model.save("fer_model_v1")

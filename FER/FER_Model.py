@@ -1,13 +1,8 @@
 import numpy as np
 
-#import matplotlib.pyplot as plt
-#import torch.nn as nn
-#import torch.nn.functional as F
-#import os
+
 from tensorflow import keras
 from keras import layers
-#from keras.datasets import mnist
-#from keras.preprocessing.image import load_img, img_to_array
 from keras.preprocessing.image import image_dataset_from_directory
 
 
@@ -33,7 +28,7 @@ test_dataset = image_dataset_from_directory(
     image_size = (48, 48),
     color_mode = "grayscale",
     batch_size = 32,
-    shuffle = False,
+    shuffle = True,
     class_names = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
 )
 
@@ -48,7 +43,7 @@ inputs = keras.Input(shape=(48, 48, 1))
 cnn_component = layers.Rescaling(1./255)(inputs)
 
 #First Layer
-cnn_component = layers.Conv2D(filters = 64, kernel_size = 3)(inputs)
+cnn_component = layers.Conv2D(filters = 64, kernel_size = 3)(cnn_component)
 cnn_component = layers.BatchNormalization()(cnn_component)
 cnn_component = layers.Activation("relu")(cnn_component)
 cnn_component = layers.Dropout(0.2)(cnn_component)
@@ -97,4 +92,4 @@ print(f"test accuracy: {testing_accuracy}")
 
 
 #Step 4: Save the Model with its current weight values
-cnn_model.save("fer_model_v1")
+cnn_model.save("fer_model_v2")

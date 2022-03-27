@@ -16,7 +16,7 @@ frontFaceClassifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade
 
 #Declare Model to be used for Emotion Recognition and Emotion Classes
 
-emotionModel = keras.models.load_model("fer_model_v1")
+emotionModel = keras.models.load_model("fer_model_v2")
 class_names = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
 
 #Get default webcam source

@@ -1,11 +1,53 @@
+//Setting up a WebSocket Server
+const wServer = require('ws');
+const wSocket = new wServer.Server({port: 3001});
+
+
+//Main (User Connection Event)
+wSocket.on('connection', ws => {
+    console.log("User Joined");
+
+    ws.on('message', data => {
+        receivedData = `${data}`.split(",");
+
+        console.log("RECEIVED DATA: ", receivedData);
+        
+        if(receivedData[0] == "request:emotion"){
+            //Python Script Component (tutorial)
+            const { spawn } = require('child_process');
+
+            const childPython = spawn('python', ['FaceDetect.py']);
+
+            //print any data from the output of the python file
+            childPython.stdout.on('data', (data) => {
+                console.log(`${data}`);
+                ws.send(`${data}`);
+
+            });
+
+            //Print out any error from the python file
+            childPython.stderr.on('data', (data) => {
+                console.error(`stderr: ${data}`);
+            });
+
+
+            //print out what happens on close
+            childPython.on('close', (code) => {
+                console.log(`child process exited with code ${code}`);
+            })
+        }
+    });
+
+});
+
+
+
+
+/*
 const express = require('express');
 app = express();
 serv = require('http').Server(app)
 
-//app.use('/fer/', require('./routes/hello.js'))
-//app.get('/', (req, res) => {
-//    res.send('hello')
-//});
 
 const PORT = 3001;
 
@@ -13,9 +55,9 @@ serv.listen(PORT, () => {
     console.log('Listening on Port: ' + PORT)
 })
 
-/*#######
-Main
-#######*/
+#######
+#Main
+#######
 
 //server startup
 var io = require('socket.io')(serv,{
@@ -62,3 +104,4 @@ io.sockets.on('connection', function(socket){
 
 });
 
+*/

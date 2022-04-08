@@ -1,7 +1,7 @@
 //Setting up a WebSocket Server
 const wServer = require('ws');
 const wSocket = new wServer.Server({port: 3001});
-
+const { spawn } = require('child_process');
 
 //Main (User Connection Event)
 wSocket.on('connection', ws => {
@@ -10,13 +10,17 @@ wSocket.on('connection', ws => {
     ws.on('message', data => {
         receivedData = `${data}`.split(",");
 
-        console.log("RECEIVED DATA: ", receivedData);
+        //console.log("RECEIVED DATA: ", receivedData);
         
         if(receivedData[0] == "request:emotion"){
             //Python Script Component (tutorial)
-            const { spawn } = require('child_process');
+
+            receivedImageData = receivedData[1] + "," + receivedData[2];
 
             const childPython = spawn('python', ['FaceDetect.py']);
+
+            //pass image data to python process
+            childPython.stdin.write(JSON.stringify(receivedImageData.trim()) + '\n');
 
             //print any data from the output of the python file
             childPython.stdout.on('data', (data) => {

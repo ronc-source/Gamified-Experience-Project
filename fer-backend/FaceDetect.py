@@ -2,75 +2,52 @@
 
 import numpy as np
 import cv2
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import tensorflow as tf
 from tensorflow import keras
 
 import sys
+from PIL import Image
+import json
+import urllib
+
+
+imageData = json.loads(sys.stdin.readline())
+
+#print(imageData)
+
+result = urllib.request.urlopen(imageData)
+
+with open("received_image.jpg", 'wb') as fh:
+    fh.write(result.file.read())
+
+
+receivedImage = cv2.imread('received_image.jpg')
+
 
 #Declare cascade classifier used for Face Detection (Uses the pre-trained Haar Cascade Classifier)
-
 frontFaceClassifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
 #Declare Model to be used for Emotion Recognition and Emotion Classes
-
 emotionModel = keras.models.load_model("fer_model_v2")
 class_names = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
 
-#Get default webcam source
-webcamSource = cv2.VideoCapture(0)
-webcamSource.set(3,500) #Set display window Width
-webcamSource.set(4,500) #Set display window Height
 
-#Main while loop variable
-capturingVideo = True
 
-while capturingVideo:
-    
-    #Read one frame of the video
-    _, videoFrame = webcamSource.read()
+#Search for face and mark it as a rectangle using the classifier
+gray = cv2.cvtColor(receivedImage, cv2.COLOR_BGR2GRAY)
+scaleFactor = 1.15
+minNeighbors = 6
+faces = frontFaceClassifier.detectMultiScale(gray, scaleFactor, minNeighbors)
 
-    #Search for face and draw a rectangle on its location
-    gray = cv2.cvtColor(videoFrame, cv2.COLOR_BGR2GRAY)
-    scaleFactor = 1.15
-    minNeighbors = 6
-    faces = frontFaceClassifier.detectMultiScale(gray, scaleFactor, minNeighbors)
-
-    for(x, y, width, height) in faces:
-        #Draw a rectangle
-        topLeftRectangle = (x,y) #Top left coordinates of expected rectangle
-        recWidth = (x + width)
-        recHeight = (y + height)
-        bottomRightRectangle = (recWidth, recHeight) #Bottom right coordinates of expected rectangle
-        color = (255,0,0)
-        colorThickness = 3
-
-        cv2.rectangle(videoFrame, topLeftRectangle, bottomRightRectangle, color, colorThickness)
+#Get the face mapping from the image, re-format it, run it through the model and get the predicted emotion
+for(x, y, width, height) in faces:
+    recWidth = (x + width)
+    recHeight = (y + height)
         
-        grayFrame = cv2.resize(gray[y:recHeight, x:recWidth], (48,48))
-        imgReformat = np.expand_dims(np.array(grayFrame), axis = 0)
+    grayFrame = cv2.resize(gray[y:recHeight, x:recWidth], (48,48))
+    imgReformat = np.expand_dims(np.array(grayFrame), axis = 0)
 
-        predictedEmotion = emotionModel.predict(imgReformat)
+    predictedEmotion = emotionModel.predict(imgReformat)
         
-        classIndex = np.where(predictedEmotion[0] == np.amax(predictedEmotion[0]))
-        print(class_names[classIndex[0][0]])
-        sys.stdout.flush()
-
-
-
-
-    #Create and display a window showing the webcam video
-    cv2.imshow('Display Window', videoFrame)
-    cv2.waitKey(1)
-
-
-    #If user clicks on the x button in the display frame, stop video capture
-    if cv2.getWindowProperty('Display Window', cv2.WND_PROP_VISIBLE) < 1 :
-        capturingVideo = False
-
-
-#Release capture and close any associated windows
-webcamSource.release()
-cv2.destroyAllWindows()
+    classIndex = np.where(predictedEmotion[0] == np.amax(predictedEmotion[0]))
+    print(class_names[classIndex[0][0]])
+    sys.stdout.flush()

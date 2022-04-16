@@ -12,7 +12,6 @@ function Service() {
     
     function testFunction(){
         startWebcam();
-        //wSocket.send("request:emotion");
     };
 
 
@@ -43,13 +42,9 @@ function Service() {
 
                 if(streamData.active){
                     setwebcamShowing('active');
+                    const drawingInterval = setInterval(drawOnCanvas, 1000);
                 }
 
-                
-                //Image of stream
-                //let capturedImage = new ImageCapture(streamData.getVideoTracks()[0]).grabFrame()
-
-                //wSocket.send(["request:emotion", capturedImage]);
 
             }).catch( (error) => {
                 console.log("Error Loading Webcam: ", error);
@@ -68,32 +63,19 @@ function Service() {
         if(verifyMessage(capturedEmotion.data)){
 
             //Update variable using react hook
-            setEmotion(capturedEmotion.data);
+            setEmotion(capturedEmotion.data[0].toUpperCase() + capturedEmotion.data.slice(1));
         }
 
     });
 
-    /* Uncomment after test (Automated canvas Drawing)
-    useEffect(() => {
-
-        var drawingInterval;
-
-        if(webcamShowing === 'active'){
-            drawingInterval = setInterval(drawOnCanvas, 1000);
-        } else if (webcamShowing === 'in-active'){
-            //needs fix on stopping
-            clearInterval(drawingInterval);
-        }
-
-    });
-    */
 
 
     function drawOnCanvas(){
         let video = document.querySelector("#liveWebcam");
         let imageCanvas = document.querySelector("#imageCanvas");
+
         //Code to hide Canvas:
-        //imageCanvas.style.display = "none";
+        imageCanvas.style.display = "none";
 
         imageCanvas.getContext('2d').drawImage(video, 0, 0, imageCanvas.width, imageCanvas.height);
             
@@ -105,14 +87,30 @@ function Service() {
 
     return (
         <div>
-            <h1>Service Page Component</h1>
-            <button onClick = {() => testFunction()}>Test</button>
-            <pre></pre>
-            <button onClick = {() => setwebcamShowing('in-active')}>Stop</button>
-            <pre></pre>
-            <button onClick = {() => drawOnCanvas()}>GET EMOTION</button>
-            <p>{ emotion }</p>
-            <video id = "liveWebcam" autoPlay></video>
+            <div className = "container-fluid bg-light">
+                <h1>Service Page Component</h1>
+                <div className = "btn-toolbar btn-toolbar-toggle gap-2 justify-content-center">
+                    <button onClick = {() => testFunction() } className = "btn btn-success btn-lg">Start Session</button>
+                    <button onClick = {() => setwebcamShowing('in-active')} className = "btn btn-danger btn-lg">Stop</button>
+                </div>
+
+                
+                <div >
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td className = "border border-dark border-4">
+                                    <video id = "liveWebcam" autoPlay width = "640" height = "480"></video>
+                                    <p className = "text-center fw-bold">Current Emotion: { emotion }</p>
+                                </td>
+                                <td className = "padding-left">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
             <canvas id = "imageCanvas" width = "640" height = "480"></canvas>
         </div>
     );

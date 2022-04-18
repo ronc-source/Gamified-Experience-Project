@@ -18,7 +18,7 @@ runningProgram = True
 frontFaceClassifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
 #Declare Model to be used for Emotion Recognition and Emotion Classes
-emotionModel = keras.models.load_model("fer_model_v2")
+emotionModel = keras.models.load_model("fer_model_v3")
 class_names = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise']
 
 

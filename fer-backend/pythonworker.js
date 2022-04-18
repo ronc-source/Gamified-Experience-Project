@@ -1,7 +1,5 @@
-/*Webworker code - not used anymore
-
 const {workerData, parentPort} = require('worker_threads');
-
+console.log(workerData);
 receivedImageData = workerData[0];
 childPython = workerData[1];
 
@@ -30,4 +28,3 @@ childPython.on('close', (code) => {
     console.log(`child process exited with code ${code}`);
 })
 
-*/

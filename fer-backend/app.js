@@ -3,14 +3,17 @@ const wServer = require('ws');
 const wSocket = new wServer.Server({port: 3001});
 const { Worker, workerData, parentPort} = require('worker_threads');
 const { spawn } = require('child_process');
+const { range } = require('express/lib/request');
 const childPython = spawn('python', ['FaceDetect.py']);
 
 const websocketList = []
 //Main (User Connection Event)
 wSocket.on('connection', ws => {
-    console.log("User Joined");
-
-    websocketList.push(ws);
+    
+    //Set a custom ID to the websocket Connection
+    const clientWebSocketID = Math.floor(1 + (10000000 * Math.random()));
+    websocketList.push([clientWebSocketID, ws]);
+    console.log("Client " + clientWebSocketID + " has joined.");
 
     ws.on('message', data => {
         receivedData = `${data}`.split(",");
@@ -23,11 +26,38 @@ wSocket.on('connection', ws => {
             receivedImageData = receivedData[1] + "," + receivedData[2];
             receivedImageData = receivedImageData.trim();
 
+            async function emotionService(){
+                let result = await runEmotionScript();
+            }
+
+            emotionService();
+
+
+        }
+    });
+
+    //On Client Disconnect, remove them from the master list of connections
+    ws.addEventListener('close', () => {
+
+        for(let i = 0; i < websocketList.length; i++)
+        {
+            if(websocketList[i][0] == clientWebSocketID)
+            {
+                websocketList.splice(i, 1);
+            }
+        }
+        
+        console.log("Client: " + clientWebSocketID + " disonnected.");
+    });
+
+
+    function runEmotionScript(){
+        return new Promise((resolve, reject) => {
             //pass image data to python process
             childPython.stdin.write(JSON.stringify(receivedImageData) + '\n');
 
             //print any data from the output of the python file
-            childPython.stdout.on('data', (data) => {
+            childPython.stdout.once('data', (data) => {
                 //console.log(`${data}`);
 
                 const modelEmotion = `${data}`;
@@ -35,26 +65,16 @@ wSocket.on('connection', ws => {
 
                 //ws.send(modelEmotion);
                 websocketList.forEach(ws => {
-                    ws.send(modelEmotion);
+                    ws[1].send(modelEmotion);
                 });
+                resolve();
 
             });
-
-            //Print out any error from the python file
-            childPython.stderr.on('data', (data) => {
-                console.error(`stderr: ${data}`);
-            });
-
-
-            //print out what happens on close
-            childPython.on('close', (code) => {
-                console.log(`child process exited with code ${code}`);
-            })
-
-
-        }
-    });
+        });
+    }
 
     
 
 });
+
+

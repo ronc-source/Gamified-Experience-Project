@@ -6,6 +6,19 @@ const { spawn } = require('child_process');
 const { range } = require('express/lib/request');
 const childPython = spawn('python', ['FaceDetect.py']);
 
+//Setting up SQL Server Connection to Postgres DB
+const {Pool} = require("pg");
+const { isNull } = require('util');
+
+const postgresDB = new Pool({
+    user: "postgres",
+    host: "localhost",
+    database: "uOttawa_FER",
+    password: "Newtrial2017",
+    port: 5432
+});
+
+
 const websocketList = []
 //Main (User Connection Event)
 wSocket.on('connection', ws => {
@@ -18,8 +31,7 @@ wSocket.on('connection', ws => {
     ws.on('message', data => {
         receivedData = `${data}`.split(",");
 
-        //console.log("RECEIVED DATA: ", receivedData);
-        
+        //Message is to request face detection for emotion
         if(receivedData[0] == "request:emotion"){
             //Python Script Component 
 
@@ -31,8 +43,30 @@ wSocket.on('connection', ws => {
             }
 
             emotionService();
+        }
 
-
+        //Message is to send data to SQL Table
+        if(`${data}`.slice(0,11) == "request:SQL"){
+            var SQLDATA = `${data}`.split("request:SQL")[1].split(",");
+            SQLDATA = SQLDATA.slice(1,SQLDATA.length);
+            
+            for(let i = 0; i < SQLDATA.length; i++)
+            {
+                if(SQLDATA[i] == '')
+                {
+                    SQLDATA[i] = null;
+                }
+            }
+            console.log(SQLDATA);
+            
+            const insertText = `
+                INSERT INTO "Emotion History" ("First Name", "Last Name", "Game Played", "Angry Emotion %", "Angry Encounter Timestamp", "Disgust Emotion %", "Disgust Encounter Timestamp",
+                "Fear Emotion %",
+                "Fear Encounter Timestamp", "Happy Emotion %", "Happy Encounter Timestamp", "Neutral Emotion %", "Neutral Encounter Timestamp",
+                "Sad Emotion %", "Sad Encounter Timestamp", "Surprise Emotion %", "Surprise Encounter Timestamp", "Session Start", "Session End")
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+            `;
+            postgresDB.query(insertText, SQLDATA);
         }
     });
 

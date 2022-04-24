@@ -63,10 +63,35 @@ wSocket.on('connection', ws => {
                 INSERT INTO "Emotion History" ("First Name", "Last Name", "Game Played", "Angry Emotion %", "Angry Encounter Timestamp", "Disgust Emotion %", "Disgust Encounter Timestamp",
                 "Fear Emotion %",
                 "Fear Encounter Timestamp", "Happy Emotion %", "Happy Encounter Timestamp", "Neutral Emotion %", "Neutral Encounter Timestamp",
-                "Sad Emotion %", "Sad Encounter Timestamp", "Surprise Emotion %", "Surprise Encounter Timestamp", "Session Start", "Session End")
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+                "Sad Emotion %", "Sad Encounter Timestamp", "Surprise Emotion %", "Surprise Encounter Timestamp", "Session Start", "Session End", "userid")
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
             `;
             postgresDB.query(insertText, SQLDATA);
+        }
+
+
+        //Handle Getting SQL Data
+        if(receivedData[0] == "request:HISTORY"){
+            const selectText = `SELECT * FROM "Emotion History" WHERE userID = $1`;
+
+            async function getHistory(){
+                var queryID = receivedData[1];
+                if(queryID === "" || queryID === null || isNaN(Number(queryID))){
+                    queryID = 0; //default so it doesnt crash
+                }
+                let result = await postgresDB.query(selectText, [queryID]);
+                return result;
+            }
+
+            let historyQuery = getHistory();
+            
+            historyQuery.then((result) => {
+                websocketList.forEach(ws => {
+                    ws[1].send(JSON.stringify(result.rows));
+                });
+            });
+
+            //console.log(historyQuery);
         }
     });
 

@@ -1,13 +1,18 @@
 //Service page component for the website - Uses bootstrap styling
 
 import {useState} from 'react'
+import {Bar, Line} from 'react-chartjs-2'
+import {Chart as ChartJS} from 'chart.js/auto'
 
-const wSocket = new WebSocket("ws://localhost:3001");
+import {wSocket} from './socketClient.js'
+
+
 var intervalIdentifier;
 
 var firstName = "";
 var lastName = "";
 var gamePlayed = "";
+var userID = "";
 
 var angryEmotion = 0;
 var disgustEmotion = 0;
@@ -29,8 +34,6 @@ var surpriseTimeStamp = "";
 var sessionStartTimeStamp = "";
 var sessionEndTimeStamp = "";
 
-//var mainTimeStamp = new Date().toISOString().split("T");
-//mainTimeStamp = mainTimeStamp[0] + " " + String(Number(mainTimeStamp[1].slice(0,2)) - 4) + mainTimeStamp[1].slice(2, mainTimeStamp[1].length-2).replace('.','-');
 
 
 function Service() {
@@ -39,6 +42,8 @@ function Service() {
 
     //Start Session Function
     function startSession(){
+        let dataGraphs = document.getElementById("dataGraphs");
+        dataGraphs.style.display = "none";
         resetEverything();
         sessionStartTimeStamp = reformatTime(new Date().toISOString().split("T"));
         startWebcam();
@@ -72,8 +77,12 @@ function Service() {
                             getEmotionPercentage('neutral'), neutralTimeStamp,
                             getEmotionPercentage('sad'), sadTimeStamp,
                             getEmotionPercentage('surprise'), surpriseTimeStamp,
-                            sessionStartTimeStamp, sessionEndTimeStamp                        
+                            sessionStartTimeStamp, sessionEndTimeStamp, userID                        
                             ];
+            
+            let dataGraphs = document.getElementById("dataGraphs");
+            dataGraphs.style.display = "block";
+
             wSocket.send(["request:SQL", [SQLArray]]);
         }
     };
@@ -92,6 +101,10 @@ function Service() {
 
     const getGamePlayed = (e) => {
         gamePlayed = e.target.value;
+    }
+
+    const getUserID = (e) => {
+        userID = e.target.value;
     }
 
     //Video Player for Live Webcam Feed (Inspired from https://www.kirupa.com/html5/accessing_your_webcam_in_html5.htm)
@@ -305,6 +318,80 @@ function Service() {
     }
 
 
+    function getMinutes(emotionTimeStamp, startTimeStamp){
+        if(emotionTimeStamp !== "" && startTimeStamp !== "")
+        {
+            var emotionValues = emotionTimeStamp.split(" ")[1].split(".")[0].split(":");
+            var startValues = startTimeStamp.split(" ")[1].split(".")[0].split(":");
+            
+            var emotionMinutes = (Number(emotionValues[0]) * 60) + Number(emotionValues[1]) + Number(emotionValues[2] / 60);
+            var startMinutes = (Number(startValues[0]) * 60) + Number(startValues[1]) + (Number(startValues[2]) / 60);
+    
+            var sessionDuration = (emotionMinutes - startMinutes).toFixed(2);
+            return sessionDuration;
+        } else {
+            return 0;
+        }
+    }
+
+    function showLine(emotion){
+        switch(emotion)
+        {
+            case 'angry':
+                if(getMinutes(angryTimeStamp, sessionStartTimeStamp) !== 0)
+                {
+                    return 'Angry'
+                } else {
+                    return null
+                }
+            case 'disgust':
+                if(getMinutes(disgustTimeStamp, sessionStartTimeStamp) !== 0)
+                {
+                    return 'Disgust'
+                } else {
+                    return null
+                }
+            case 'fear':
+                if(getMinutes(fearTimeStamp, sessionStartTimeStamp) !== 0)
+                {
+                    return 'Fear'
+                } else {
+                    return null
+                }
+            case 'happy':
+                if(getMinutes(happyTimeStamp, sessionStartTimeStamp) !== 0)
+                {
+                    return 'Happy'
+                } else {
+                    return null
+                }
+            case 'neutral':
+                if(getMinutes(neutralTimeStamp, sessionStartTimeStamp) !== 0)
+                {
+                    return 'Neutral'
+                } else {
+                    return null
+                }
+            case 'sad':
+                if(getMinutes(sadTimeStamp, sessionStartTimeStamp) !== 0)
+                {
+                    return 'Sad'
+                } else {
+                    return null
+                }
+            case 'surprise':
+                if(getMinutes(surpriseTimeStamp, sessionStartTimeStamp) !== 0)
+                {
+                    return 'Surprise'
+                } else {
+                    return null
+                }
+            default:
+                return null
+        }
+    }
+
+
     //Listeners
     wSocket.addEventListener("message", (capturedEmotion) =>{
 
@@ -362,6 +449,13 @@ function Service() {
 
                         <br></br><br></br>
 
+                        <label id ="userID">
+                            User ID:
+                            <input type ="text" onChange = {getUserID}></input>
+                        </label>
+
+                        <br></br><br></br>
+
                         <label id = "AngryPercentage">
                             Angry: 0%
                         </label>
@@ -414,9 +508,57 @@ function Service() {
                         
                     </div>
                 </div>
+
+                <div style = {{width: 600, display: "none"}} id = "dataGraphs">
+                    <Bar
+                        data = {{
+                            labels: ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise'],
+                            datasets: [
+                                {
+                                    label: 'Percentage of Emotion Shown (%)',
+                                    backgroundColor: 'rgba(211,211,211,1)',
+                                    borderColor: 'rgba(0,0,0,1)',
+                                    borderWidth: 2,
+                                    data: [
+                                    getEmotionPercentage('angry'),
+                                    getEmotionPercentage('disgust'),
+                                    getEmotionPercentage('fear'),
+                                    getEmotionPercentage('happy'),
+                                    getEmotionPercentage('neutral'),
+                                    getEmotionPercentage('sad'),
+                                    getEmotionPercentage('surprise')
+                                    ]
+                                }
+                            ]
+                        }}
+                    />
+
+                    <Line
+                        data = {{
+                            labels: [showLine('angry'), showLine('disgust'), showLine('fear'), showLine('happy'), showLine('neutral'), showLine('sad'), showLine('surprise')],
+                            datasets: [
+                                {
+                                    label: 'Last Time Emotion Was Shown (Minutes into Session)',
+                                    backgroundColor: 'rgba(211,211,211,1)',
+                                    borderColor: 'rgba(0,0,0,1)',
+                                    borderWidth: 2,
+                                    showLine: false,
+                                    data: [
+                                    getMinutes(angryTimeStamp, sessionStartTimeStamp),
+                                    getMinutes(disgustTimeStamp, sessionStartTimeStamp),
+                                    getMinutes(fearTimeStamp, sessionStartTimeStamp),
+                                    getMinutes(happyTimeStamp, sessionStartTimeStamp),
+                                    getMinutes(neutralTimeStamp, sessionStartTimeStamp),
+                                    getMinutes(sadTimeStamp, sessionStartTimeStamp),
+                                    getMinutes(surpriseTimeStamp, sessionStartTimeStamp)
+                                    ]
+                                }
+                            ]
+                        }}
+                    />
+                </div>
+
             </div>
-
-
 
             <canvas id = "imageCanvas" width = "640" height = "480"></canvas>
         </div>
